@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eng. Ashraf Dashboard</title>
+    
+    <!-- أوامر الشاشة الكاملة للموبايل (PWA) -->
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ashraf Dash">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Tajawal', 'sans-serif'], en: ['Inter', 'sans-serif'] }, colors: { dark: '#0f172a', darker: '#020617', card: '#1e293b', accent: '#38bdf8', danger: '#f43f5e', success: '#10b981', warning: '#fbbf24', purple: '#a855f7' } } }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #020617; color: #f8fafc; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .pulse-soft { animation: pulseSoft 2s infinite; }
+        @keyframes pulseSoft { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } }
+        .toast-enter { transform: translateY(-100%); opacity: 0; } .toast-show { transform: translateY(0); opacity: 1; }
+        .dynamic-item { transition: all 0.3s ease; }
+        #loading-overlay, #lock-screen { backdrop-filter: blur(5px); transition: opacity 0.5s ease; }
+        @media (max-width: 768px) { input, textarea { font-size: 16px !important; } }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-sans">
+
+    <!-- شاشة القفل (باسوورد المهندس أشرف) -->
+    <div id="lock-screen" class="fixed inset-0 z-[1000] bg-darker flex flex-col items-center justify-center backdrop-blur-md">
+        <div class="glass-panel p-8 rounded-2xl flex flex-col items-center border border-gray-700 shadow-2xl">
+            <i class="fa-solid fa-lock text-5xl text-accent mb-4"></i>
+            <h2 class="text-xl text-white font-bold mb-2 font-en">Private Access Only</h2>
+            <p class="text-xs text-gray-400 mb-6">برجاء إدخال الرمز السري</p>
+            <input type="password" id="pin-input" class="w-32 bg-dark border-2 border-gray-600 focus:border-accent rounded-xl text-center text-3xl p-3 text-white tracking-widest outline-none transition-all" placeholder="••••" maxlength="4" inputmode="numeric">
+            <p id="pin-error" class="text-danger mt-4 text-sm hidden font-bold animate-pulse">الرمز غير صحيح!</p>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-[200] bg-darker flex flex-col items-center justify-center">
+        <i class="fa-solid fa-circle-notch fa-spin text-5xl text-accent mb-4"></i>
+        <p class="text-gray-300 font-bold font-en mt-2">Connecting Database...</p>
+    </div>
+
+    <!-- Water Toast (مع الصوت) -->
+    <div id="water-toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-accent text-darker font-bold px-6 py-3 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.5)] flex items-center gap-3 transition-all duration-500 toast-enter">
+        <i class="fa-solid fa-droplet text-xl animate-bounce"></i> <span>وقت رشفة المياه يا هندسة!</span>
+    </div>
+
+    <header class="glass-panel sticky top-0 z-50 shadow-lg" dir="ltr">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-accent/20 p-3 rounded-xl text-accent border border-accent/30"><i class="fa-solid fa-robot text-2xl"></i></div>
+                <div class="font-en">
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-wide">Eng. Ashraf Dashboard</h1>
+                    <p class="text-xs sm:text-sm text-gray-400">Mechatronics Masterplan - Baccalaureate</p>
+                </div>
+            </div>
+            <div class="flex flex-col items-end" dir="rtl">
+                <div id="clock" class="text-lg font-bold text-accent bg-dark px-4 py-1.5 rounded-lg border border-gray-700 font-en tabular-nums">--:--</div>
+                <span id="sync-status" class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-circle-notch fa-spin"></i> جاري الاتصال...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column -->
+        <div class="flex flex-col gap-6 lg:col-span-1">
+            <section class="bg-card rounded-2xl p-5 border border-gray-700 relative overflow-hidden shadow-lg">
+                <div class="absolute -right-4 -top-4 opacity-5 text-white"><i class="fa-solid fa-scale-balanced text-8xl"></i></div>
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-white relative z-10"><i class="fa-solid fa-clipboard-list text-accent"></i> قواعد التركيز والنظام</h2>
+                <ul class="space-y-3 text-sm text-gray-300 relative z-10">
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-mug-hot text-warning mt-1"></i><span><strong>تقنين الكافيين:</strong> للحفاظ على صحة المعدة وتجنب التوتر.</span></li>
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-shield-halved text-accent mt-1"></i><span><strong>إدارة المشتتات:</strong> حماية الطاقة الذهنية وتجاهل أي مقاطعات.</span></li>
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-moon text-indigo-400 mt-1"></i><span><strong>التعافي البدني:</strong> الالتزام بمواعيد النوم لضمان الاستشفاء.</span></li>
+                </ul>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 text-center shadow-lg">
+                <h2 class="text-lg font-bold mb-1 text-accent flex justify-center items-center gap-2"><i class="fa-solid fa-glass-water"></i> قانون الرشفة</h2>
+                <div class="flex justify-center items-center gap-8 mb-6 mt-4">
+                    <button onclick="addWater()" class="w-16 h-16 rounded-full bg-accent text-darker font-bold text-2xl hover:bg-sky-400 transition-all transform active:scale-90 pulse-soft shadow-lg"><i class="fa-solid fa-plus"></i></button>
+                    <div class="text-center">
+                        <div class="text-5xl font-black text-white font-en tabular-nums" id="water-count">0</div>
+                        <div class="text-xs text-gray-400 mt-1">رشفة / 30</div>
+                    </div>
+                </div>
+                <div class="w-full bg-dark rounded-full h-3 border border-gray-700 overflow-hidden">
+                    <div id="water-progress" class="bg-accent h-full transition-all duration-700 relative" style="width: 0%"></div>
+                </div>
+                <button onclick="resetWater()" class="text-xs text-gray-500 hover:text-white mt-4 transition-all">تصفير العداد <i class="fa-solid fa-rotate-left"></i></button>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-success"><i class="fa-solid fa-apple-whole"></i> التغذية العلاجية</h2>
+                    <button onclick="addMealModal()" class="text-xs bg-success/20 hover:bg-success hover:text-darker text-success font-bold px-3 py-1.5 rounded-lg border border-success/50 transition-all flex items-center gap-1"><i class="fa-solid fa-plus"></i> إضافة</button>
+                </div>
+                <div class="space-y-3 overflow-y-auto pr-2" style="max-height: 250px;" id="meals-container"></div>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 shadow-lg">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-400"><i class="fa-solid fa-mosque"></i> الصلاة</h2>
+                <div class="flex justify-between items-center" id="prayers-container"></div>
+                <button onclick="resetPrayers()" class="w-full text-center text-xs text-gray-500 hover:text-white mt-4 transition-all">تصفير صلوات اليوم <i class="fa-solid fa-rotate-left"></i></button>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-center mb-4 relative z-10">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-white"><i class="fa-regular fa-calendar-check text-accent"></i> مواعيد مهمة</h2>
+                    <button onclick="addAppointmentModal()" class="text-xs bg-accent/20 hover:bg-accent hover:text-darker text-accent font-bold px-3 py-1.5 rounded-lg border border-accent/50 transition-all flex items-center gap-1"><i class="fa-solid fa-plus"></i> إضافة</button>
+                </div>
+                <div class="space-y-3 relative z-10" id="appointments-container"></div>
+            </section>
+
+            <div id="custom-sections-container" class="flex flex-col gap-6"></div>
+            <button onclick="openCustomSectionModal()" class="w-full glass-panel rounded-2xl p-4 shadow-lg border-dashed border-2 border-gray-600 text-gray-400 hover:text-accent hover:border-accent hover:bg-accent/5 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-layer-group"></i> إضافة قسم جديد (Custom Widget)</button>
+        </div>
+
+        <!-- Right Column -->
+        <div class="flex flex-col gap-6 lg:col-span-2">
+            <section class="glass-panel rounded-2xl p-8 shadow-lg flex flex-col items-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gray-800"><div id="timer-progress" class="h-full bg-accent w-0 transition-all duration-1000"></div></div>
+                <div class="w-full flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-stopwatch text-accent"></i> مؤقت المذاكرة (مخصص)</h2>
+                    <div class="flex gap-2">
+                        <div class="flex items-center gap-2 bg-dark border border-gray-700 rounded-lg p-1"><span class="text-xs text-gray-400 pr-2">مذاكرة:</span><input type="number" id="input-study" value="60" onchange="saveInputs()" class="w-12 bg-transparent text-white font-en text-center outline-none" min="1"></div>
+                        <div class="flex items-center gap-2 bg-dark border border-gray-700 rounded-lg p-1"><span class="text-xs text-gray-400 pr-2">راحة:</span><input type="number" id="input-break" value="15" onchange="saveInputs()" class="w-12 bg-transparent text-white font-en text-center outline-none" min="1"></div>
+                    </div>
+                </div>
+                <div class="text-7xl md:text-9xl font-black text-white mb-8 tracking-widest tabular-nums font-en drop-shadow-lg" id="timer-display">60:00</div>
+                <div class="flex flex-wrap justify-center gap-3 w-full max-w-lg">
+                    <button id="btn-start-study" onclick="startCustomTimer('study')" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.2)]"><i class="fa-solid fa-book text-lg"></i> ابدأ مذاكرة</button>
+                    <button id="btn-start-break" onclick="startCustomTimer('break')" class="flex-1 bg-success hover:bg-emerald-400 text-darker font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fa-solid fa-mug-saucer text-lg"></i> ابدأ راحة</button>
+                    <button id="btn-pause" onclick="togglePauseTimer()" class="w-14 bg-warning hover:bg-yellow-500 text-darker font-bold py-3 rounded-xl transition-all flex justify-center items-center transform active:scale-95"><i class="fa-solid fa-pause text-lg" id="pause-icon"></i></button>
+                    <button onclick="resetTimer()" class="w-14 bg-dark hover:bg-gray-800 border border-gray-700 text-white font-bold py-3 rounded-xl transition-all flex justify-center items-center transform active:scale-95"><i class="fa-solid fa-rotate-right text-lg"></i></button>
+                </div>
+                <p id="timer-status" class="text-sm text-gray-400 mt-4 h-5">جاهز للبدء</p>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                    <div><h2 class="text-xl font-bold flex items-center gap-2 font-en"><i class="fa-solid fa-graduation-cap text-warning"></i> Baccalaureate Tasks</h2></div>
+                    <button onclick="addTaskModal()" class="text-sm bg-accent/20 hover:bg-accent hover:text-darker text-accent font-bold px-4 py-2 rounded-lg border border-accent/50 transition-all flex items-center gap-2"><i class="fa-solid fa-plus"></i> مهمة جديدة</button>
+                </div>
+                <div id="tasks-container" class="space-y-3 overflow-y-auto pr-2" style="max-height: 250px;"></div>
+            </section>
+
+            <section class="glass-panel rounded-2xl p-6 shadow-lg flex-grow flex flex-col">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-white"><i class="fa-solid fa-pen-to-square text-gray-400"></i> المساحة الحرة (Free Space)</h2>
+                <textarea id="free-notes" class="w-full flex-grow bg-dark/50 border border-gray-700 rounded-xl p-4 text-white text-sm resize-none focus:outline-none focus:border-accent min-h-[150px] placeholder-gray-600" placeholder="اكتب هنا أي ملاحظات، أفكار، أو حسابات..."></textarea>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modals (Hidden) -->
+    <div id="confirm-modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[150] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="confirm-modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300 text-center"><i class="fa-solid fa-triangle-exclamation text-4xl text-warning mb-4"></i><h3 class="text-lg font-bold mb-6 text-white" id="confirm-message">هل أنت متأكد؟</h3><div class="flex gap-3"><button id="btn-confirm-yes" class="flex-1 bg-danger hover:bg-red-500 text-white font-bold py-2 rounded-xl transition-all">نعم، متأكد</button><button onclick="closeModal('confirm-modal-overlay', 'confirm-modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300"><h3 class="text-xl font-bold mb-4 text-white font-en">Add Task</h3><input type="text" id="task-input" class="w-full bg-dark border border-gray-600 rounded-xl p-4 text-white focus:outline-none focus:border-accent mb-6" placeholder="مثال: مراجعة فصل الفيزياء..."><div class="flex gap-3"><button onclick="saveTask()" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 rounded-xl transition-all">حفظ</button><button onclick="closeModal('modal-overlay', 'modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-3 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+    <div id="appointment-modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="appointment-modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300"><h3 class="text-xl font-bold mb-4 text-white">إضافة ميعاد</h3><input type="text" id="app-title-input" class="w-full bg-dark border border-gray-600 rounded-xl p-3 text-white focus:outline-none focus:border-accent mb-3" placeholder="العنوان (مثال: دكتور الأسنان)"><input type="text" id="app-date-input" class="w-full bg-dark border border-gray-600 rounded-xl p-3 text-white focus:outline-none focus:border-accent mb-6" placeholder="التاريخ (مثال: 13/10)"><div class="flex gap-3"><button onclick="saveAppointment()" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 rounded-xl transition-all">حفظ</button><button onclick="closeModal('appointment-modal-overlay', 'appointment-modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-3 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+    <div id="meal-modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="meal-modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300"><h3 class="text-xl font-bold mb-4 text-white">إضافة وجبة</h3><input type="text" id="meal-input" class="w-full bg-dark border border-gray-600 rounded-xl p-4 text-white focus:outline-none focus:border-success mb-6" placeholder="مثال: فطار خفيف..."><div class="flex gap-3"><button onclick="saveMeal()" class="flex-1 bg-success hover:bg-emerald-400 text-darker font-bold py-3 rounded-xl transition-all">حفظ</button><button onclick="closeModal('meal-modal-overlay', 'meal-modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-3 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+    <div id="custom-section-modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="custom-section-modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300"><h3 class="text-xl font-bold mb-4 text-white">إضافة قسم جديد</h3><input type="text" id="section-title-input" class="w-full bg-dark border border-gray-600 rounded-xl p-3 text-white focus:outline-none focus:border-accent mb-4" placeholder="اسم القسم..."><p class="text-sm text-gray-400 mb-2">اختر الأيقونة:</p><div class="grid grid-cols-5 gap-2 mb-6" id="icon-selector"><div onclick="selectIcon('fa-dumbbell', this)" class="icon-option p-3 rounded-lg border border-gray-600 text-center cursor-pointer hover:border-accent hover:text-accent transition-all text-white bg-dark"><i class="fa-solid fa-dumbbell"></i></div><div onclick="selectIcon('fa-code', this)" class="icon-option p-3 rounded-lg border border-gray-600 text-center cursor-pointer hover:border-accent hover:text-accent transition-all text-white bg-dark"><i class="fa-solid fa-code"></i></div><div onclick="selectIcon('fa-book', this)" class="icon-option p-3 rounded-lg border border-gray-600 text-center cursor-pointer hover:border-accent hover:text-accent transition-all text-white bg-dark"><i class="fa-solid fa-book"></i></div><div onclick="selectIcon('fa-heart-pulse', this)" class="icon-option p-3 rounded-lg border border-gray-600 text-center cursor-pointer hover:border-accent hover:text-accent transition-all text-white bg-dark"><i class="fa-solid fa-heart-pulse"></i></div><div onclick="selectIcon('fa-wallet', this)" class="icon-option p-3 rounded-lg border border-gray-600 text-center cursor-pointer hover:border-accent hover:text-accent transition-all text-white bg-dark"><i class="fa-solid fa-wallet"></i></div></div><div class="flex gap-3"><button onclick="saveCustomSection()" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 rounded-xl transition-all">إنشاء القسم</button><button onclick="closeModal('custom-section-modal-overlay', 'custom-section-modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-3 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+    <div id="custom-item-modal-overlay" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div id="custom-item-modal-content" class="bg-card border border-gray-700 p-6 rounded-2xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300"><h3 class="text-xl font-bold mb-4 text-white">إضافة عنصر جديد</h3><input type="hidden" id="active-section-id"><input type="text" id="item-title-input" class="w-full bg-dark border border-gray-600 rounded-xl p-4 text-white focus:outline-none focus:border-accent mb-6" placeholder="اكتب اسم العنصر هنا..."><div class="flex gap-3"><button onclick="saveCustomItem()" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 rounded-xl transition-all">حفظ</button><button onclick="closeModal('custom-item-modal-overlay', 'custom-item-modal-content')" class="flex-1 bg-dark hover:bg-gray-800 border border-gray-600 text-white font-bold py-3 rounded-xl transition-all">إلغاء</button></div></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // حط الباسوورد بتاعك هنا بين علامات التنصيص
+        const USER_PIN = "4159"; 
+        // ==========================================
+        
+        const pinInput = document.getElementById('pin-input');
+        const lockScreen = document.getElementById('lock-screen');
+        const pinError = document.getElementById('pin-error');
+
+        if(localStorage.getItem('dashboard_unlocked') === 'true') {
+            lockScreen.style.display = 'none';
+        }
+
+        pinInput.addEventListener('input', function(e) {
+            pinError.classList.add('hidden');
+            if(e.target.value.length === USER_PIN.length) {
+                if(e.target.value === USER_PIN) {
+                    localStorage.setItem('dashboard_unlocked', 'true');
+                    lockScreen.style.opacity = '0';
+                    setTimeout(() => lockScreen.style.display = 'none', 500);
+                } else {
+                    pinError.classList.remove('hidden');
+                    pinInput.value = ''; 
+                }
+            }
+        });
+    </script>
+
+    <!-- FIREBASE DIRECT SYNC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAPiaBLEyShL2ff3PnS9RBfjqmCPBAS4LI",
+            authDomain: "eng-ashraf-dashboard.firebaseapp.com",
+            projectId: "eng-ashraf-dashboard",
+            storageBucket: "eng-ashraf-dashboard.firebasestorage.app",
+            messagingSenderId: "168664130727",
+            appId: "1:168664130727:web:a5f47b8c912f2279c8e782"
+        };
+        
+        let app, db;
+        // مسار مباشر وسهل في الخزنة
+        const syncPath = 'ashraf_db'; 
+        const docName = 'main_sync_v4'; 
+        
+        window.isCloudSyncActive = false; 
+        let isUpdatingFromCloud = false; 
+
+        const DEFAULT_STATE = {
+            water: 0, waterTarget: 30, meals: [],
+            prayers: [ { id: 1, name: 'الفجر', done: false }, { id: 2, name: 'الظهر', done: false }, { id: 3, name: 'العصر', done: false }, { id: 4, name: 'المغرب', done: false }, { id: 5, name: 'العشاء', done: false } ],
+            appointments: [], tasks: [], customSections: [], timerInputs: { study: 60, break: 15 }, freeNotes: ""
+        };
+
+        window.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+        async function initCloudSync() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                window.isCloudSyncActive = true;
+                setupRealtimeListener();
+            } catch (error) {
+                console.warn("DB Error:", error.message);
+                loadLocalFallback();
+            }
+        }
+
+        function setupRealtimeListener() {
+            const docRef = doc(db, syncPath, docName); 
+            
+            onSnapshot(docRef, (snapshot) => {
+                // أول ما الخزنة ترد، بنكتب متصل فوراً
+                const syncStatus = document.getElementById('sync-status');
+                syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> متصل';
+                syncStatus.className = 'text-[10px] text-success mt-1';
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                if (snapshot.exists()) {
+                    if (!isUpdatingFromCloud) {
+                        window.state = snapshot.data().state;
+                        if(!window.state.freeNotes) window.state.freeNotes = "";
+                        if(!window.state.customSections) window.state.customSections = [];
+                        
+                        document.getElementById('free-notes').value = window.state.freeNotes;
+                        document.getElementById('input-study').value = window.state.timerInputs?.study || 60;
+                        document.getElementById('input-break').value = window.state.timerInputs?.break || 15;
+                        window.renderAll();
+                    }
+                } else { 
+                    window.saveDataToCloud(); 
+                }
+            }, (error) => {
+                console.error("Sync Error:", error);
+                loadLocalFallback();
+            });
+        }
+
+        window.saveDataToCloud = async function() {
+            if (!window.isCloudSyncActive) { localStorage.setItem('ashraf_db_v4', JSON.stringify(window.state)); return; }
+            try {
+                isUpdatingFromCloud = true;
+                const docRef = doc(db, syncPath, docName);
+                await setDoc(docRef, { state: window.state }, { merge: true });
+                setTimeout(() => { isUpdatingFromCloud = false; }, 500);
+            } catch (e) { console.error("Save Error:", e); }
+        }
+
+        function loadLocalFallback() {
+            const savedData = localStorage.getItem('ashraf_db_v4');
+            if (savedData) { window.state = JSON.parse(savedData); }
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-hard-drive"></i> متصل (محلي)';
+            document.getElementById('sync-status').className = 'text-[10px] text-warning mt-1';
+            window.renderAll();
+        }
+
+        initCloudSync();
+
+        document.getElementById('free-notes').addEventListener('input', function(e) {
+            window.state.freeNotes = e.target.value;
+            clearTimeout(window.notesTimeout);
+            window.notesTimeout = setTimeout(window.saveDataToCloud, 1000);
+        });
+    </script>
+
+    <!-- UI Scripts -->
+    <script>
+        let selectedIconForNewSection = 'fa-star';
+        let customConfirmCallback = null;
+
+        window.renderAll = function() { updateWaterUI(); renderMeals(); renderPrayers(); renderAppointments(); renderTasks(); renderCustomSections(); }
+
+        function updateWaterUI() { document.getElementById('water-count').innerText = window.state.water; const percent = Math.min((window.state.water / window.state.waterTarget) * 100, 100); document.getElementById('water-progress').style.width = `${percent}%`; }
+        function renderMeals() { const c = document.getElementById('meals-container'); if(window.state.meals.length === 0) { c.innerHTML = `<div class="text-center text-gray-500 py-4 text-sm border border-dashed border-gray-700 rounded-xl">لا توجد وجبات</div>`; return; } c.innerHTML = window.state.meals.map(m => `<div onclick="toggleMeal(${m.id})" class="dynamic-item flex items-center justify-between p-3.5 rounded-xl border ${m.done ? 'bg-success/10 border-success/30' : 'bg-dark border-gray-700 hover:border-gray-500'} cursor-pointer group"><div class="flex items-center gap-3"><div class="w-6 h-6 rounded flex-shrink-0 border-2 flex items-center justify-center transition-all ${m.done ? 'bg-success border-success text-darker' : 'border-gray-500 group-hover:border-white text-transparent'}"><i class="fa-solid fa-check text-xs"></i></div><span class="text-sm font-medium ${m.done ? 'line-through text-gray-500' : 'text-gray-200'}">${m.name}</span></div><button onclick="deleteMeal(${m.id}, event)" class="text-gray-500 hover:text-danger p-2 opacity-0 group-hover:opacity-100 transition-all rounded-lg"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
+        function renderPrayers() { const c = document.getElementById('prayers-container'); c.innerHTML = window.state.prayers.map(p => `<div onclick="togglePrayer(${p.id})" class="flex flex-col items-center gap-2 cursor-pointer group dynamic-item"><div class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${p.done ? 'bg-indigo-500 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-dark border-gray-600 text-transparent group-hover:border-indigo-400'}"><i class="fa-solid fa-check"></i></div><span class="text-xs font-bold ${p.done ? 'text-indigo-400' : 'text-gray-400'}">${p.name}</span></div>`).join(''); }
+        function renderAppointments() { const c = document.getElementById('appointments-container'); if(window.state.appointments.length === 0) { c.innerHTML = `<div class="text-center text-gray-500 py-4 text-sm border border-dashed border-gray-700 rounded-xl">لا يوجد مواعيد</div>`; return; } c.innerHTML = window.state.appointments.map(app => `<div class="dynamic-item flex items-center justify-between bg-dark/50 p-3.5 rounded-xl border border-gray-700/50 group hover:border-gray-500"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center ${app.color} shadow-inner"><i class="fa-solid ${app.icon || 'fa-calendar-check'} text-lg"></i></div><div><h3 class="text-sm font-bold text-gray-200">${app.title}</h3><p class="text-xs text-gray-500 mt-0.5"><i class="fa-regular fa-calendar"></i> ${app.date}</p></div></div><button onclick="deleteAppointment(${app.id})" class="text-gray-500 hover:text-danger p-2 opacity-0 group-hover:opacity-100 transition-all rounded-lg"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
+        function renderTasks() { const c = document.getElementById('tasks-container'); if(window.state.tasks.length === 0) { c.innerHTML = `<div class="text-center text-gray-500 py-8 border-2 border-dashed border-gray-700 rounded-xl">أضف مهام البكالوريا من هنا</div>`; return; } c.innerHTML = window.state.tasks.map(task => `<div onclick="toggleTask(${task.id})" class="dynamic-item flex items-center justify-between p-4 rounded-xl border ${task.done ? 'bg-gray-800/40 border-gray-800' : 'bg-dark border-gray-600 hover:border-accent/50'} cursor-pointer group"><div class="flex items-center gap-3"><div class="w-6 h-6 rounded-full flex-shrink-0 border-2 flex items-center justify-center transition-all ${task.done ? 'bg-gray-600 border-gray-600 text-white' : 'border-warning text-transparent group-hover:border-accent'}"><i class="fa-solid fa-check text-xs"></i></div><span class="text-sm md:text-base font-en ${task.done ? 'line-through text-gray-500' : 'text-gray-100 font-medium'}">${task.name}</span></div><button onclick="deleteTask(${task.id}, event)" class="text-gray-500 hover:text-danger p-2 opacity-0 group-hover:opacity-100 transition-all rounded-lg"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
+        function renderCustomSections() { const c = document.getElementById('custom-sections-container'); if(!window.state.customSections) return; c.innerHTML = window.state.customSections.map(s => `<section class="glass-panel rounded-2xl p-6 shadow-lg relative group"><button onclick="requestDeleteSection(${s.id})" class="absolute top-4 left-4 text-gray-500 hover:text-danger opacity-0 group-hover:opacity-100 transition-all bg-dark p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button><div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3"><h2 class="text-lg font-bold flex items-center gap-2 text-white"><i class="fa-solid ${s.icon} text-purple"></i> ${s.title}</h2><button onclick="openCustomItemModal(${s.id})" class="text-xs bg-purple/20 hover:bg-purple hover:text-white text-purple px-3 py-1.5 rounded-lg border border-purple/50 transition-all flex items-center gap-1"><i class="fa-solid fa-plus"></i> إضافة</button></div><div class="space-y-2">${s.items.length === 0 ? `<p class="text-xs text-gray-500 text-center py-2">لا يوجد عناصر</p>` : ''}${s.items.map(item => `<div onclick="toggleCustomItem(${s.id}, ${item.id})" class="dynamic-item flex items-center justify-between p-3 rounded-xl border ${item.done ? 'bg-purple/10 border-purple/30' : 'bg-dark border-gray-700 hover:border-gray-500'} cursor-pointer group/item"><div class="flex items-center gap-3"><div class="w-5 h-5 rounded flex-shrink-0 border-2 flex items-center justify-center transition-all ${item.done ? 'bg-purple border-purple text-white' : 'border-gray-500 group-hover/item:border-white text-transparent'}"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-sm ${item.done ? 'line-through text-gray-500' : 'text-gray-200'}">${item.name}</span></div><button onclick="deleteCustomItem(${s.id}, ${item.id}, event)" class="text-gray-500 hover:text-danger p-1 opacity-0 group-hover/item:opacity-100 transition-all"><i class="fa-solid fa-xmark"></i></button></div>`).join('')}</div></section>`).join(''); }
+
+        function addWater() { if (window.state.water < window.state.waterTarget) { window.state.water++; window.saveDataToCloud(); updateWaterUI(); const countEl = document.getElementById('water-count'); countEl.classList.add('text-accent', 'scale-110'); setTimeout(() => countEl.classList.remove('text-accent', 'scale-110'), 200); } }
+        function resetWater() { window.state.water = 0; window.saveDataToCloud(); updateWaterUI(); }
+        function toggleMeal(id) { const m = window.state.meals.find(x => x.id === id); if(m){ m.done = !m.done; window.saveDataToCloud(); renderMeals(); } }
+        function deleteMeal(id, event) { event.stopPropagation(); window.state.meals = window.state.meals.filter(m => m.id !== id); window.saveDataToCloud(); renderMeals(); }
+        function togglePrayer(id) { const p = window.state.prayers.find(x => x.id === id); if(p){ p.done = !p.done; window.saveDataToCloud(); renderPrayers(); } }
+        function resetPrayers() { window.state.prayers.forEach(p => p.done = false); window.saveDataToCloud(); renderPrayers(); }
+        function toggleTask(id) { const t = window.state.tasks.find(x => x.id === id); if(t){ t.done = !t.done; window.saveDataToCloud(); renderTasks(); } }
+        function deleteTask(id, event) { event.stopPropagation(); window.state.tasks = window.state.tasks.filter(t => t.id !== id); window.saveDataToCloud(); renderTasks(); }
+        function deleteAppointment(id) { window.state.appointments = window.state.appointments.filter(a => a.id !== id); window.saveDataToCloud(); renderAppointments(); }
+        function toggleCustomItem(sectionId, itemId) { const s = window.state.customSections.find(x => x.id === sectionId); if(s) { const i = s.items.find(x => x.id === itemId); if(i) { i.done = !i.done; window.saveDataToCloud(); renderCustomSections(); } } }
+        function deleteCustomItem(sectionId, itemId, event) { event.stopPropagation(); const s = window.state.customSections.find(x => x.id === sectionId); if(s) { s.items = s.items.filter(x => x.id !== itemId); window.saveDataToCloud(); renderCustomSections(); } }
+        
+        function showConfirmModal(message, onConfirm) { document.getElementById('confirm-message').innerText = message; customConfirmCallback = onConfirm; openModal('confirm-modal-overlay', 'confirm-modal-content'); }
+        document.getElementById('btn-confirm-yes').addEventListener('click', () => { if(customConfirmCallback) customConfirmCallback(); closeModal('confirm-modal-overlay', 'confirm-modal-content'); });
+        function requestDeleteSection(sectionId) { showConfirmModal('هل أنت متأكد من مسح هذا القسم بالكامل؟', () => { window.state.customSections = window.state.customSections.filter(s => s.id !== sectionId); window.saveDataToCloud(); renderCustomSections(); }); }
+
+        function openModal(oId, cId, iId = null) { const o = document.getElementById(oId); const c = document.getElementById(cId); o.classList.remove('hidden'); o.classList.add('flex'); setTimeout(() => { o.classList.remove('opacity-0'); c.classList.remove('scale-95'); if(iId) document.getElementById(iId).focus(); }, 10); }
+        function closeModal(oId, cId) { const o = document.getElementById(oId); const c = document.getElementById(cId); o.classList.add('opacity-0'); c.classList.add('scale-95'); setTimeout(() => { o.classList.add('hidden'); o.classList.remove('flex'); document.querySelectorAll('input[type="text"]').forEach(i => i.value = ''); }, 300); }
+        function addTaskModal() { openModal('modal-overlay', 'modal-content', 'task-input'); }
+        function addAppointmentModal() { openModal('appointment-modal-overlay', 'appointment-modal-content', 'app-title-input'); }
+        function addMealModal() { openModal('meal-modal-overlay', 'meal-modal-content', 'meal-input'); }
+        function openCustomSectionModal() { selectedIconForNewSection = 'fa-star'; document.querySelectorAll('.icon-option').forEach(el => { el.classList.remove('bg-accent', 'border-accent'); el.classList.add('bg-dark'); }); openModal('custom-section-modal-overlay', 'custom-section-modal-content', 'section-title-input'); }
+        function openCustomItemModal(sectionId) { document.getElementById('active-section-id').value = sectionId; openModal('custom-item-modal-overlay', 'custom-item-modal-content', 'item-title-input'); }
+
+        function saveTask() { const val = document.getElementById('task-input').value.trim(); if (val) { window.state.tasks.push({ id: Date.now(), name: val, done: false }); window.saveDataToCloud(); renderTasks(); closeModal('modal-overlay', 'modal-content'); } }
+        function saveAppointment() { const title = document.getElementById('app-title-input').value.trim(); const date = document.getElementById('app-date-input').value.trim(); if (title) { window.state.appointments.push({ id: Date.now(), title: title, date: date || 'غير محدد', icon: 'fa-calendar-check', color: 'text-accent' }); window.saveDataToCloud(); renderAppointments(); closeModal('appointment-modal-overlay', 'appointment-modal-content'); } }
+        function saveMeal() { const val = document.getElementById('meal-input').value.trim(); if (val) { window.state.meals.push({ id: Date.now(), name: val, done: false }); window.saveDataToCloud(); renderMeals(); closeModal('meal-modal-overlay', 'meal-modal-content'); } }
+        function selectIcon(iconClass, element) { selectedIconForNewSection = iconClass; document.querySelectorAll('.icon-option').forEach(el => { el.classList.remove('bg-accent', 'text-darker', 'border-accent'); el.classList.add('bg-dark', 'text-white'); }); element.classList.remove('bg-dark', 'text-white'); element.classList.add('bg-accent', 'text-darker', 'border-accent'); }
+        function saveCustomSection() { const title = document.getElementById('section-title-input').value.trim(); if(title) { window.state.customSections.push({ id: Date.now(), title: title, icon: selectedIconForNewSection || 'fa-star', items: [] }); window.saveDataToCloud(); renderCustomSections(); closeModal('custom-section-modal-overlay', 'custom-section-modal-content'); } }
+        function saveCustomItem() { const title = document.getElementById('item-title-input').value.trim(); const sectionId = parseInt(document.getElementById('active-section-id').value); if(title && sectionId) { const section = window.state.customSections.find(s => s.id === sectionId); if(section) { section.items.push({ id: Date.now(), name: title, done: false }); window.saveDataToCloud(); renderCustomSections(); closeModal('custom-item-modal-overlay', 'custom-item-modal-content'); } } }
+
+        // --- TIMER WITH SOUNDS ---
+        let timer = { timeLeft: 0, duration: 0, isRunning: false, isPaused: false, mode: 'study', intervalId: null };
+        function saveInputs() { window.state.timerInputs.study = parseInt(document.getElementById('input-study').value) || 60; window.state.timerInputs.break = parseInt(document.getElementById('input-break').value) || 15; window.saveDataToCloud(); }
+        function updateTimerUI() { const mins = Math.floor(timer.timeLeft / 60); const secs = timer.timeLeft % 60; document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; const progress = timer.duration > 0 ? 100 - ((timer.timeLeft / timer.duration) * 100) : 0; const pBar = document.getElementById('timer-progress'); pBar.style.width = `${progress}%`; pBar.className = `h-full transition-all duration-1000 ${timer.mode === 'study' ? 'bg-accent' : 'bg-success'}`; }
+        
+        function showWaterToast() { 
+            try { new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3').play(); } catch(e) {}
+            const t = document.getElementById('water-toast'); t.classList.remove('toast-enter'); t.classList.add('toast-show'); 
+            setTimeout(() => { t.classList.remove('toast-show'); t.classList.add('toast-enter'); }, 5000); 
+        }
+        
+        function startCustomTimer(mode) { clearInterval(timer.intervalId); timer.mode = mode; timer.isRunning = true; timer.isPaused = false; let minutes = mode === 'study' ? (parseInt(document.getElementById('input-study').value) || 60) : (parseInt(document.getElementById('input-break').value) || 15); saveInputs(); const status = document.getElementById('timer-status'); status.innerText = mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; status.className = `text-sm mt-4 h-5 animate-pulse ${mode === 'study' ? 'text-accent' : 'text-success'}`; timer.duration = minutes * 60; timer.timeLeft = timer.duration; document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; updateTimerUI(); runTimerLoop(); }
+        function runTimerLoop() { timer.intervalId = setInterval(() => { if (timer.timeLeft > 0) { timer.timeLeft--; updateTimerUI(); if (timer.mode === 'study' && timer.timeLeft % 600 === 0 && timer.timeLeft !== timer.duration) showWaterToast(); } else { timerEnded(); } }, 1000); }
+        function togglePauseTimer() { if (!timer.isRunning && !timer.isPaused) return; const icon = document.getElementById('pause-icon'); const status = document.getElementById('timer-status'); if (timer.isPaused) { timer.isPaused = false; icon.className = 'fa-solid fa-pause text-lg'; status.innerText = timer.mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; runTimerLoop(); } else { clearInterval(timer.intervalId); timer.isPaused = true; icon.className = 'fa-solid fa-play text-lg'; status.innerText = '⏸️ التايمر متوقف مؤقتاً'; status.className = 'text-sm text-warning mt-4 h-5'; } }
+        function resetTimer() { clearInterval(timer.intervalId); timer.isRunning = false; timer.isPaused = false; const studyMins = parseInt(document.getElementById('input-study').value) || 60; timer.duration = studyMins * 60; timer.timeLeft = timer.duration; document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; const status = document.getElementById('timer-status'); status.innerText = 'جاهز للبدء'; status.className = 'text-sm text-gray-400 mt-4 h-5'; updateTimerUI(); }
+        
+        function timerEnded() { 
+            try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
+            clearInterval(timer.intervalId); timer.isRunning = false; timer.isPaused = false; 
+            const status = document.getElementById('timer-status'); status.innerText = '🔔 انتهى الوقت!'; status.className = 'text-sm text-danger mt-4 h-5 font-bold'; 
+            const display = document.getElementById('timer-display'); display.classList.add('text-danger'); 
+            let flashes = 0; const flashInterval = setInterval(() => { display.style.opacity = display.style.opacity === '0' ? '1' : '0'; flashes++; if(flashes > 10) { clearInterval(flashInterval); display.style.opacity = '1'; display.classList.remove('text-danger'); } }, 300); 
+        }
+
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); }, 1000);
+    </script>
+</body>
+</html>
