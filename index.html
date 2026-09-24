@@ -16,7 +16,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -35,6 +35,105 @@
         .dynamic-item { transition: all 0.3s ease; }
         #loading-overlay, #lock-screen { backdrop-filter: blur(5px); transition: opacity 0.5s ease; }
         @media (max-width: 768px) { input, textarea { font-size: 16px !important; } }
+
+        /* ==========================================
+           FLIP CLOCK & DREAM WIDGET CSS ADDITIONS
+           ========================================== */
+        .flip-clock-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 2rem; direction: ltr; }
+        .flip-clock { display: flex; gap: 0.5rem; align-items: center; justify-content: center; }
+        @media (min-width: 768px) { .flip-clock { gap: 1.5rem; } }
+        
+        .flip-unit { display: flex; flex-direction: column; align-items: center; }
+        .digits-group { display: flex; gap: 0.25rem; }
+        @media (min-width: 768px) { .digits-group { gap: 0.4rem; } }
+
+        .flip-card {
+            position: relative;
+            width: 45px;
+            height: 65px;
+            background-color: #1a1a1a;
+            border-radius: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #f3f4f6;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+            perspective: 400px;
+            user-select: none;
+            font-family: 'Inter', sans-serif;
+        }
+        @media (min-width: 768px) { 
+            .flip-card { width: 70px; height: 100px; font-size: 4.5rem; border-radius: 0.75rem; } 
+        }
+
+        .flip-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #121212; 
+            z-index: 20;
+            transform: translateY(-50%);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .flip-half {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            backface-visibility: hidden;
+        }
+
+        .flip-top { top: 0; align-items: flex-end; border-top-left-radius: inherit; border-top-right-radius: inherit; border-bottom: 1px solid rgba(0,0,0,0.4); }
+        .flip-top span { transform: translateY(50%); }
+        
+        .flip-bottom { bottom: 0; align-items: flex-start; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; border-top: 1px solid rgba(255,255,255,0.05); }
+        .flip-bottom span { transform: translateY(-50%); }
+
+        .flip-card-anim-top { top: 0; align-items: flex-end; transform-origin: bottom; border-top-left-radius: inherit; border-top-right-radius: inherit; z-index: 10; animation: flipTopAnim 0.25s ease-in forwards; }
+        .flip-card-anim-top span { transform: translateY(50%); }
+
+        .flip-card-anim-bottom { bottom: 0; align-items: flex-start; transform-origin: top; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; z-index: 10; transform: rotateX(90deg); animation: flipBottomAnim 0.25s ease-out 0.25s forwards; }
+        .flip-card-anim-bottom span { transform: translateY(-50%); }
+
+        @keyframes flipTopAnim { 0% { transform: rotateX(0deg); } 100% { transform: rotateX(-90deg); } }
+        @keyframes flipBottomAnim { 0% { transform: rotateX(90deg); } 100% { transform: rotateX(0deg); } }
+
+        .time-label { margin-top: 0.75rem; color: #6b7280; text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.2em; font-weight: 600; font-family: 'Inter', sans-serif; }
+        @media (min-width: 768px) { .time-label { font-size: 0.75rem; letter-spacing: 0.25em; } }
+
+        .dream-widget {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.3em;
+            color: #f3f4f6;
+            min-height: 2.5rem;
+            transition: opacity 0.5s ease-in-out;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        @media (min-width: 768px) { .dream-widget { font-size: 1.75rem; margin-bottom: 1.5rem; } }
+        .dream-fade { opacity: 0; }
+        
+        /* Effect for end of timer */
+        .timer-flash .flip-card { background-color: #4c0519 !important; color: #f43f5e !important; }
+        .timer-flash .flip-half { background-color: #4c0519 !important; }
+
+        /* ==========================================
+           FULLSCREEN FOCUS MODE CSS (Pseudo-fullscreen)
+           ========================================== */
+        .pseudo-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; border: none !important; margin: 0 !important; justify-content: center !important; padding: 2rem 5vw !important; }
+        .pseudo-fullscreen .flip-clock-wrapper { transform: scale(1.3); margin-top: 5vh; margin-bottom: 8vh; }
+        .pseudo-fullscreen .timer-header-controls { opacity: 0.2; transition: opacity 0.3s; }
+        .pseudo-fullscreen .timer-header-controls:hover { opacity: 1; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col font-sans">
@@ -131,21 +230,60 @@
             <button onclick="openCustomSectionModal()" class="w-full glass-panel rounded-2xl p-4 shadow-lg border-dashed border-2 border-gray-600 text-gray-400 hover:text-accent hover:border-accent hover:bg-accent/5 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-layer-group"></i> إضافة قسم جديد (Custom Widget)</button>
         </div>
 
-        <!-- Right Column -->
+        <!-- Right Column (Timer & Tasks) -->
         <div class="flex flex-col gap-6 lg:col-span-2">
-            <section class="glass-panel rounded-2xl p-8 shadow-lg flex flex-col items-center relative overflow-hidden">
+            <!-- غيرنا الـ glass-panel لـ bg-[#0a0a0a] عشان يبقى أسود مطفي فخم -->
+            <section id="timer-section" class="bg-[#0a0a0a] rounded-2xl p-8 shadow-2xl border border-gray-800 flex flex-col items-center relative overflow-hidden transition-all">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gray-800"><div id="timer-progress" class="h-full bg-accent w-0 transition-all duration-1000"></div></div>
-                <div class="w-full flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-stopwatch text-accent"></i> مؤقت المذاكرة (مخصص)</h2>
+                
+                <div class="w-full flex justify-between items-center mb-6 timer-header-controls">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-white"><i class="fa-solid fa-stopwatch text-accent"></i> مؤقت المذاكرة (مخصص)</h2>
+                        <!-- زرار الشاشة الكاملة (Focus Mode) -->
+                        <button onclick="toggleFullscreenTimer()" class="text-gray-500 hover:text-accent transition-all bg-dark p-2 rounded-lg border border-gray-700 hover:border-accent" title="وضع التركيز (شاشة كاملة)"><i class="fa-solid fa-expand text-sm"></i></button>
+                    </div>
                     <div class="flex gap-2">
                         <div class="flex items-center gap-2 bg-dark border border-gray-700 rounded-lg p-1"><span class="text-xs text-gray-400 pr-2">مذاكرة:</span><input type="number" id="input-study" value="60" onchange="saveInputs()" class="w-12 bg-transparent text-white font-en text-center outline-none" min="1"></div>
                         <div class="flex items-center gap-2 bg-dark border border-gray-700 rounded-lg p-1"><span class="text-xs text-gray-400 pr-2">راحة:</span><input type="number" id="input-break" value="15" onchange="saveInputs()" class="w-12 bg-transparent text-white font-en text-center outline-none" min="1"></div>
                     </div>
                 </div>
-                <div class="text-7xl md:text-9xl font-black text-white mb-8 tracking-widest tabular-nums font-en drop-shadow-lg" id="timer-display">60:00</div>
-                <div class="flex flex-wrap justify-center gap-3 w-full max-w-lg">
-                    <button id="btn-start-study" onclick="startCustomTimer('study')" class="flex-1 bg-accent hover:bg-sky-400 text-darker font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 shadow-[0_0_15px_rgba(56,189,248,0.2)]"><i class="fa-solid fa-book text-lg"></i> ابدأ مذاكرة</button>
-                    <button id="btn-start-break" onclick="startCustomTimer('break')" class="flex-1 bg-success hover:bg-emerald-400 text-darker font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fa-solid fa-mug-saucer text-lg"></i> ابدأ راحة</button>
+
+                <!-- NEW FLIP CLOCK & DREAM WIDGET STRUCTURE -->
+                <div id="timer-display-wrapper" class="flip-clock-wrapper transition-all duration-300">
+                    <div id="dream-display" class="dream-widget" dir="ltr">D.R.E.A.M</div>
+                    
+                    <div class="flip-clock" dir="ltr">
+                        <!-- Hours -->
+                        <div class="flip-unit">
+                            <div class="digits-group">
+                                <div class="flip-card" id="card-h1"><div class="flip-half flip-top"><span>0</span></div><div class="flip-half flip-bottom"><span>0</span></div></div>
+                                <div class="flip-card" id="card-h2"><div class="flip-half flip-top"><span>1</span></div><div class="flip-half flip-bottom"><span>1</span></div></div>
+                            </div>
+                            <span class="time-label">Hours</span>
+                        </div>
+                        <!-- Minutes -->
+                        <div class="flip-unit">
+                            <div class="digits-group">
+                                <div class="flip-card" id="card-m1"><div class="flip-half flip-top"><span>0</span></div><div class="flip-half flip-bottom"><span>0</span></div></div>
+                                <div class="flip-card" id="card-m2"><div class="flip-half flip-top"><span>0</span></div><div class="flip-half flip-bottom"><span>0</span></div></div>
+                            </div>
+                            <span class="time-label">Minutes</span>
+                        </div>
+                        <!-- Seconds -->
+                        <div class="flip-unit">
+                            <div class="digits-group">
+                                <div class="flip-card" id="card-s1"><div class="flip-half flip-top"><span>0</span></div><div class="flip-half flip-bottom"><span>0</span></div></div>
+                                <div class="flip-card" id="card-s2"><div class="flip-half flip-top"><span>0</span></div><div class="flip-half flip-bottom"><span>0</span></div></div>
+                            </div>
+                            <span class="time-label">Seconds</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- END NEW FLIP CLOCK STRUCTURE -->
+
+                <div class="flex flex-wrap justify-center gap-3 w-full max-w-lg mt-4">
+                    <button id="btn-start-study" onclick="startCustomTimer('study')" class="flex-1 bg-white hover:bg-gray-200 text-black font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-[0.1em]"><i class="fa-solid fa-book text-lg"></i> START STUDY</button>
+                    <button id="btn-start-break" onclick="startCustomTimer('break')" class="flex-1 bg-transparent hover:bg-dark border border-gray-600 text-gray-300 hover:text-white font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 transform active:scale-95 tracking-[0.1em]"><i class="fa-solid fa-mug-saucer text-lg"></i> REST</button>
                     <button id="btn-pause" onclick="togglePauseTimer()" class="w-14 bg-warning hover:bg-yellow-500 text-darker font-bold py-3 rounded-xl transition-all flex justify-center items-center transform active:scale-95"><i class="fa-solid fa-pause text-lg" id="pause-icon"></i></button>
                     <button onclick="resetTimer()" class="w-14 bg-dark hover:bg-gray-800 border border-gray-700 text-white font-bold py-3 rounded-xl transition-all flex justify-center items-center transform active:scale-95"><i class="fa-solid fa-rotate-right text-lg"></i></button>
                 </div>
@@ -160,9 +298,12 @@
                 <div id="tasks-container" class="space-y-3 overflow-y-auto pr-2" style="max-height: 250px;"></div>
             </section>
 
-            <section class="glass-panel rounded-2xl p-6 shadow-lg flex-grow flex flex-col">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-white"><i class="fa-solid fa-pen-to-square text-gray-400"></i> المساحة الحرة (Free Space)</h2>
-                <textarea id="free-notes" class="w-full flex-grow bg-dark/50 border border-gray-700 rounded-xl p-4 text-white text-sm resize-none focus:outline-none focus:border-accent min-h-[150px] placeholder-gray-600" placeholder="اكتب هنا أي ملاحظات، أفكار، أو حسابات..."></textarea>
+            <section class="glass-panel rounded-2xl p-6 shadow-lg flex-grow flex flex-col relative overflow-hidden">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-white relative z-10"><i class="fa-solid fa-pen-to-square text-gray-400"></i> المساحة الحرة (Free Space)</h2>
+                <textarea id="free-notes" class="w-full flex-grow bg-dark/50 border border-gray-700 rounded-xl p-4 text-white text-sm resize-none focus:outline-none focus:border-accent min-h-[150px] placeholder-gray-600 relative z-10" placeholder="اكتب هنا أي ملاحظات، أفكار، أو حسابات..."></textarea>
+                <div class="absolute bottom-4 left-0 right-0 text-center opacity-30 pointer-events-none z-0">
+                    <p class="text-gray-500 text-[10px] md:text-xs tracking-[0.5em] font-mono uppercase">"You win the war inside you"</p>
+                </div>
             </section>
         </div>
     </main>
@@ -263,7 +404,6 @@
             const docRef = doc(db, syncPath, docName); 
             
             onSnapshot(docRef, (snapshot) => {
-                // أول ما الخزنة ترد، بنكتب متصل فوراً
                 const syncStatus = document.getElementById('sync-status');
                 syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check"></i> متصل';
                 syncStatus.className = 'text-[10px] text-success mt-1';
@@ -279,6 +419,8 @@
                         document.getElementById('input-study').value = window.state.timerInputs?.study || 60;
                         document.getElementById('input-break').value = window.state.timerInputs?.break || 15;
                         window.renderAll();
+                        // تحديث التايمر بمجرد جلب البيانات لأول مرة
+                        if (!timer.isRunning && !timer.isPaused) resetTimer();
                     }
                 } else { 
                     window.saveDataToCloud(); 
@@ -306,6 +448,7 @@
             document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-hard-drive"></i> متصل (محلي)';
             document.getElementById('sync-status').className = 'text-[10px] text-warning mt-1';
             window.renderAll();
+            if (!timer.isRunning && !timer.isPaused) resetTimer();
         }
 
         initCloudSync();
@@ -317,7 +460,7 @@
         });
     </script>
 
-    <!-- UI Scripts -->
+    <!-- UI Scripts & Flip Clock Logic -->
     <script>
         let selectedIconForNewSection = 'fa-star';
         let customConfirmCallback = null;
@@ -362,10 +505,68 @@
         function saveCustomSection() { const title = document.getElementById('section-title-input').value.trim(); if(title) { window.state.customSections.push({ id: Date.now(), title: title, icon: selectedIconForNewSection || 'fa-star', items: [] }); window.saveDataToCloud(); renderCustomSections(); closeModal('custom-section-modal-overlay', 'custom-section-modal-content'); } }
         function saveCustomItem() { const title = document.getElementById('item-title-input').value.trim(); const sectionId = parseInt(document.getElementById('active-section-id').value); if(title && sectionId) { const section = window.state.customSections.find(s => s.id === sectionId); if(section) { section.items.push({ id: Date.now(), name: title, done: false }); window.saveDataToCloud(); renderCustomSections(); closeModal('custom-item-modal-overlay', 'custom-item-modal-content'); } } }
 
-        // --- TIMER WITH SOUNDS ---
+        // --- TIMER & FLIP CLOCK LOGIC ---
         let timer = { timeLeft: 0, duration: 0, isRunning: false, isPaused: false, mode: 'study', intervalId: null };
-        function saveInputs() { window.state.timerInputs.study = parseInt(document.getElementById('input-study').value) || 60; window.state.timerInputs.break = parseInt(document.getElementById('input-break').value) || 15; window.saveDataToCloud(); }
-        function updateTimerUI() { const mins = Math.floor(timer.timeLeft / 60); const secs = timer.timeLeft % 60; document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; const progress = timer.duration > 0 ? 100 - ((timer.timeLeft / timer.duration) * 100) : 0; const pBar = document.getElementById('timer-progress'); pBar.style.width = `${progress}%`; pBar.className = `h-full transition-all duration-1000 ${timer.mode === 'study' ? 'bg-accent' : 'bg-success'}`; }
+        
+        function saveInputs() { 
+            window.state.timerInputs.study = parseInt(document.getElementById('input-study').value) || 60; 
+            window.state.timerInputs.break = parseInt(document.getElementById('input-break').value) || 15; 
+            window.saveDataToCloud(); 
+            if(!timer.isRunning && !timer.isPaused) { resetTimer(); }
+        }
+
+        function updateDigit(cardId, newVal) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const topSpan = card.querySelector('.flip-top span');
+            const bottomSpan = card.querySelector('.flip-bottom span');
+            const currentVal = topSpan.innerText;
+
+            if (currentVal !== newVal.toString()) {
+                topSpan.innerText = newVal;
+
+                const animTop = document.createElement('div');
+                animTop.className = 'flip-half flip-card-anim-top';
+                animTop.innerHTML = `<span>${currentVal}</span>`;
+
+                const animBottom = document.createElement('div');
+                animBottom.className = 'flip-half flip-card-anim-bottom';
+                animBottom.innerHTML = `<span>${newVal}</span>`;
+
+                card.appendChild(animTop);
+                card.appendChild(animBottom);
+
+                setTimeout(() => {
+                    bottomSpan.innerText = newVal;
+                    if (animTop.parentNode) animTop.remove();
+                    if (animBottom.parentNode) animBottom.remove();
+                }, 500);
+            }
+        }
+
+        function updateTimerUI() { 
+            // 1. Update Progress Bar
+            const progress = timer.duration > 0 ? 100 - ((timer.timeLeft / timer.duration) * 100) : 0; 
+            const pBar = document.getElementById('timer-progress'); 
+            pBar.style.width = `${progress}%`; 
+            pBar.className = `h-full transition-all duration-1000 ${timer.mode === 'study' ? 'bg-accent' : 'bg-success'}`; 
+            
+            // 2. Update Flip Clock UI
+            const h = Math.floor(timer.timeLeft / 3600);
+            const m = Math.floor((timer.timeLeft % 3600) / 60);
+            const s = timer.timeLeft % 60;
+
+            const hStr = String(h).padStart(2, '0');
+            const mStr = String(m).padStart(2, '0');
+            const sStr = String(s).padStart(2, '0');
+
+            updateDigit('card-h1', hStr[0]);
+            updateDigit('card-h2', hStr[1]);
+            updateDigit('card-m1', mStr[0]);
+            updateDigit('card-m2', mStr[1]);
+            updateDigit('card-s1', sStr[0]);
+            updateDigit('card-s2', sStr[1]);
+        }
         
         function showWaterToast() { 
             try { new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3').play(); } catch(e) {}
@@ -373,17 +574,131 @@
             setTimeout(() => { t.classList.remove('toast-show'); t.classList.add('toast-enter'); }, 5000); 
         }
         
-        function startCustomTimer(mode) { clearInterval(timer.intervalId); timer.mode = mode; timer.isRunning = true; timer.isPaused = false; let minutes = mode === 'study' ? (parseInt(document.getElementById('input-study').value) || 60) : (parseInt(document.getElementById('input-break').value) || 15); saveInputs(); const status = document.getElementById('timer-status'); status.innerText = mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; status.className = `text-sm mt-4 h-5 animate-pulse ${mode === 'study' ? 'text-accent' : 'text-success'}`; timer.duration = minutes * 60; timer.timeLeft = timer.duration; document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; updateTimerUI(); runTimerLoop(); }
-        function runTimerLoop() { timer.intervalId = setInterval(() => { if (timer.timeLeft > 0) { timer.timeLeft--; updateTimerUI(); if (timer.mode === 'study' && timer.timeLeft % 600 === 0 && timer.timeLeft !== timer.duration) showWaterToast(); } else { timerEnded(); } }, 1000); }
-        function togglePauseTimer() { if (!timer.isRunning && !timer.isPaused) return; const icon = document.getElementById('pause-icon'); const status = document.getElementById('timer-status'); if (timer.isPaused) { timer.isPaused = false; icon.className = 'fa-solid fa-pause text-lg'; status.innerText = timer.mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; runTimerLoop(); } else { clearInterval(timer.intervalId); timer.isPaused = true; icon.className = 'fa-solid fa-play text-lg'; status.innerText = '⏸️ التايمر متوقف مؤقتاً'; status.className = 'text-sm text-warning mt-4 h-5'; } }
-        function resetTimer() { clearInterval(timer.intervalId); timer.isRunning = false; timer.isPaused = false; const studyMins = parseInt(document.getElementById('input-study').value) || 60; timer.duration = studyMins * 60; timer.timeLeft = timer.duration; document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; const status = document.getElementById('timer-status'); status.innerText = 'جاهز للبدء'; status.className = 'text-sm text-gray-400 mt-4 h-5'; updateTimerUI(); }
+        function startCustomTimer(mode) { 
+            document.getElementById('timer-display-wrapper').classList.remove('timer-flash');
+            clearInterval(timer.intervalId); 
+            timer.mode = mode; 
+            timer.isRunning = true; 
+            timer.isPaused = false; 
+            
+            let minutes = mode === 'study' ? (parseInt(document.getElementById('input-study').value) || 60) : (parseInt(document.getElementById('input-break').value) || 15); 
+            
+            const status = document.getElementById('timer-status'); 
+            status.innerText = mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; 
+            status.className = `text-sm mt-4 h-5 animate-pulse ${mode === 'study' ? 'text-accent' : 'text-success'}`; 
+            
+            timer.duration = minutes * 60; 
+            timer.timeLeft = timer.duration; 
+            document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; 
+            
+            updateTimerUI(); 
+            runTimerLoop(); 
+        }
+
+        function runTimerLoop() { 
+            timer.intervalId = setInterval(() => { 
+                if (timer.timeLeft > 0) { 
+                    timer.timeLeft--; 
+                    updateTimerUI(); 
+                    if (timer.mode === 'study' && timer.timeLeft % 1200 === 0 && timer.timeLeft !== timer.duration) showWaterToast(); 
+                } else { 
+                    timerEnded(); 
+                } 
+            }, 1000); 
+        }
+
+        function togglePauseTimer() { 
+            if (!timer.isRunning && !timer.isPaused) return; 
+            const icon = document.getElementById('pause-icon'); 
+            const status = document.getElementById('timer-status'); 
+            if (timer.isPaused) { 
+                timer.isPaused = false; 
+                icon.className = 'fa-solid fa-pause text-lg'; 
+                status.innerText = timer.mode === 'study' ? '🔥 جاري المذاكرة بتركيز...' : '☕ وقت الراحة الاستشفاء...'; 
+                runTimerLoop(); 
+            } else { 
+                clearInterval(timer.intervalId); 
+                timer.isPaused = true; 
+                icon.className = 'fa-solid fa-play text-lg'; 
+                status.innerText = '⏸️ التايمر متوقف مؤقتاً'; 
+                status.className = 'text-sm text-warning mt-4 h-5'; 
+            } 
+        }
+
+        function resetTimer() { 
+            document.getElementById('timer-display-wrapper').classList.remove('timer-flash');
+            clearInterval(timer.intervalId); 
+            timer.isRunning = false; 
+            timer.isPaused = false; 
+            timer.mode = 'study';
+            const studyMins = parseInt(document.getElementById('input-study').value) || 60; 
+            timer.duration = studyMins * 60; 
+            timer.timeLeft = timer.duration; 
+            
+            document.getElementById('pause-icon').className = 'fa-solid fa-pause text-lg'; 
+            const status = document.getElementById('timer-status'); 
+            status.innerText = 'جاهز للبدء'; 
+            status.className = 'text-sm text-gray-400 mt-4 h-5'; 
+            updateTimerUI(); 
+        }
         
         function timerEnded() { 
             try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
-            clearInterval(timer.intervalId); timer.isRunning = false; timer.isPaused = false; 
-            const status = document.getElementById('timer-status'); status.innerText = '🔔 انتهى الوقت!'; status.className = 'text-sm text-danger mt-4 h-5 font-bold'; 
-            const display = document.getElementById('timer-display'); display.classList.add('text-danger'); 
-            let flashes = 0; const flashInterval = setInterval(() => { display.style.opacity = display.style.opacity === '0' ? '1' : '0'; flashes++; if(flashes > 10) { clearInterval(flashInterval); display.style.opacity = '1'; display.classList.remove('text-danger'); } }, 300); 
+            clearInterval(timer.intervalId); 
+            timer.isRunning = false; 
+            timer.isPaused = false; 
+            
+            const status = document.getElementById('timer-status'); 
+            status.innerText = '🔔 انتهى الوقت!'; 
+            status.className = 'text-sm text-danger mt-4 h-5 font-bold'; 
+            
+            const display = document.getElementById('timer-display-wrapper'); 
+            display.classList.add('timer-flash'); 
+            
+            let flashes = 0; 
+            const flashInterval = setInterval(() => { 
+                display.style.opacity = display.style.opacity === '0.5' ? '1' : '0.5'; 
+                flashes++; 
+                if(flashes > 10) { 
+                    clearInterval(flashInterval); 
+                    display.style.opacity = '1'; 
+                } 
+            }, 300); 
+        }
+
+        // --- DREAM WIDGET LOOP ---
+        const dreamStates = [
+            "D.R.E.A.M",
+            "D = Discipline",
+            "R = Routine",
+            "E = Education",
+            "A = Action",
+            "M = Mentality"
+        ];
+        let dreamIndex = 0;
+        const dreamDisplay = document.getElementById('dream-display');
+
+        setInterval(() => {
+            if(dreamDisplay && !document.hidden) {
+                dreamDisplay.classList.add('dream-fade');
+                setTimeout(() => {
+                    dreamIndex = (dreamIndex + 1) % dreamStates.length;
+                    dreamDisplay.innerText = dreamStates[dreamIndex];
+                    dreamDisplay.classList.remove('dream-fade');
+                }, 500);
+            }
+        }, 5000);
+
+        // --- FULLSCREEN LOGIC ---
+        function toggleFullscreenTimer() {
+            const timerSection = document.getElementById('timer-section');
+            timerSection.classList.toggle('pseudo-fullscreen');
+            
+            if (timerSection.classList.contains('pseudo-fullscreen')) {
+                document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
+            } else {
+                document.body.style.overflow = ''; // إرجاع التمرير لطبيعته
+            }
         }
 
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); }, 1000);
